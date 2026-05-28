@@ -1,0 +1,2 @@
+RGB_BANDS = [4, 3, 2]
+NIR_BANDS = [8]

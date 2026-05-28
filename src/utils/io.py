@@ -46,10 +46,10 @@ def validate_raster(path: Path, expected_bands: int = 13):
 
     return True
 
-def check_band_indices(path: Path, band_count: int = 13):
+def check_band_indices(path: Path, expected_bands: list[int] = [1,2,3,4,5,6,7,8,9,10,11,12,13]):
     with rio.open(path) as dataset:
-        actual_indices = set(range(1, dataset.count + 1))
-        missing_indices = set(range(1, band_count + 1)) - actual_indices
+        actual_indices = set(dataset.indexes)
+        missing_indices = set(expected_bands) - actual_indices
         if missing_indices:
             raise ValueError(f"Missing expected band indices: {missing_indices}")
     return True
