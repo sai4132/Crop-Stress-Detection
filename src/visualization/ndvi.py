@@ -8,7 +8,7 @@ RED_BAND = 4
 
 def calculate_ndvi(nir_band: np.ndarray, red_band: np.ndarray):
     e = 1e-10
-    return (nir_band - red_band) / (nir_band + red_band + e)
+    return (nir_band.astype(float) - red_band.astype(float)) / (nir_band.astype(float) + red_band.astype(float) + e)
 
 def visualize_ndvi(band_data: np.ndarray, index: int):
     # if validate_raster(path) and check_band_indices(path, expected_bands=bands):
@@ -17,7 +17,8 @@ def visualize_ndvi(band_data: np.ndarray, index: int):
     ndvi_data = calculate_ndvi(nir_data, red_data)
 
     fig, axes = plt.subplots(figsize=(10, 10))
-    axes.imshow(ndvi_data, cmap='magma')
+    img = axes.imshow(ndvi_data, cmap='RdYlGn')
+    plt.colorbar(img, ax=axes, fraction=0.046, pad=0.04)
     axes.set_title(f"NDVI Image of index_{index}")  
     
     return fig, axes
