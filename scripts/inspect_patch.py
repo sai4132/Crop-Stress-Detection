@@ -10,6 +10,8 @@ import random
 from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
+from src.indices.vegetation import calculate_ndvi
+import warnings
 
 paths = []
 if MULTI_SPECTRAL_DIR.exists():
@@ -86,7 +88,19 @@ def main():
     
     if args.ndvi:
         if check_band_indices(patch_path, expected_bands=[4, 8]):
-            ndvi_fig, _ = visualize_ndvi(band_data, index)
+            ndvi_data = calculate_ndvi(band_data)
+            ndvi_diagnostics = {
+                "min": ndvi_data.min(),
+                "max": ndvi_data.max(),
+                "mean": ndvi_data.mean(),
+                "std": ndvi_data.std()
+            }
+            if ndvi_diagnostics["min"] < -1 or ndvi_diagnostics["max"] > 1:
+                warnings.warn(f"NDVI values are out of expected range [-1, 1]")
+            print(f"\nNDVI diagnostics are: \nmin_value: {ndvi_diagnostics['min']}, max_value: {ndvi_diagnostics['max']} \n \
+                  mean_value: {ndvi_diagnostics['mean']}, std_value: {ndvi_diagnostics['std']}\n \
+                  NaN values: {np.isnan(ndvi_data).sum()} \nInf values: {(ndvi_data == np.inf).sum()}\n")
+            ndvi_fig, _ = visualize_ndvi(ndvi_data, index)
             save_path = INSPECTION_OUTPUT_DIR/f"ndvi/INDEX_{index}_NDVI_{time_stamp}.png" if args.save is None \
                 else PROJECT_ROOT/args.save/f"INDEX_{index}_NDVI_{time_stamp}.png"
             ndvi_fig.savefig(save_path)

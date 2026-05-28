@@ -1,21 +1,8 @@
 import matplotlib.pyplot as plt
-import math
+from src.indices.vegetation import calculate_ndvi
 import numpy as np
 
-
-NIR_BAND = 8
-RED_BAND = 4
-
-def calculate_ndvi(nir_band: np.ndarray, red_band: np.ndarray):
-    e = 1e-10
-    return (nir_band.astype(float) - red_band.astype(float)) / (nir_band.astype(float) + red_band.astype(float) + e)
-
-def visualize_ndvi(band_data: np.ndarray, index: int):
-    # if validate_raster(path) and check_band_indices(path, expected_bands=bands):
-    nir_data = band_data[NIR_BAND-1]
-    red_data = band_data[RED_BAND-1]
-    ndvi_data = calculate_ndvi(nir_data, red_data)
-
+def visualize_ndvi(ndvi_data: np.ndarray, index: int):
     fig, axes = plt.subplots(figsize=(10, 10))
     img = axes.imshow(ndvi_data, cmap='RdYlGn')
     plt.colorbar(img, ax=axes, fraction=0.046, pad=0.04)
