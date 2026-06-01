@@ -23,31 +23,31 @@ for idx, path in enumerate(file_paths):
                         "s1": metadata.get_s1_path_from_s2_path(path, paths.SAR_DIR),
                         "lc": metadata.get_lc_path_from_s2_path(path, paths.LAND_COVER_DIR)}
 
-def validate_raster(path: Path, raster_metadata: dict = None, sample_metadata: dict = None):
+def validate_raster(path: Path, raster_metadata: io.RasterMetadata = None, sample_metadata: metadata.PatchMetadata = None):
 
     # 1. Check for empty raster (dimensions)
-    if 0 in raster_metadata["shape"]:
-        raise ValueError(f"Empty raster dimensions: {raster_metadata['shape']} for file: {path}")
+    if 0 in raster_metadata.shape:
+        raise ValueError(f"Empty raster dimensions: {raster_metadata.shape} for file: {path}")
     
     # 2. Sensor Type Logic
-    if sample_metadata["sensor"] == "s2":
+    if sample_metadata.sensor == "s2":
         expected_bands = 13
-    elif sample_metadata["sensor"] == "s1":
+    elif sample_metadata.sensor == "s1":
         expected_bands = 2
-    elif sample_metadata["sensor"] == "lc":
+    elif sample_metadata.sensor == "lc":
         expected_bands = 4
     else:
-        raise ValueError(f"Unknown sensor '{sample_metadata['sensor']}'. Expected 's2', 's1', or 'lc'.")
+        raise ValueError(f"Unknown sensor '{sample_metadata.sensor}'. Expected 's2', 's1', or 'lc'.")
     
     # 3. Band Count Logic
-    if raster_metadata["band_count"] != expected_bands:
+    if raster_metadata.band_count != expected_bands:
         raise ValueError(
             f"Band count mismatch for '{path.name}'. "
-            f"Expected {expected_bands}, found {raster_metadata['band_count']}"
+            f"Expected {expected_bands}, found {raster_metadata.band_count}"
         )
 
     # 4. Dtype Check
-    if not raster_metadata["dtype"]:
+    if not raster_metadata.dtype:
         raise ValueError("Raster has no valid data type (dtype is undefined).")
 
     return True
@@ -98,7 +98,7 @@ def main():
             
             band_data = io.load_raster(raster)
             print(f"{sensor} Patch metadata and diagnostics:\n")
-            print(f"\nPatch CRS: {raster_metadata['crs']} \nPatch shape: {raster_metadata['shape']} \nPatch dtype: {raster_metadata['dtype']} \nBand count: {raster_metadata['band_count']}")
+            print(f"\nPatch CRS: {raster_metadata.crs} \nPatch shape: {raster_metadata.shape} \nPatch dtype: {raster_metadata.dtype} \nBand count: {raster_metadata.band_count}")
             print(f"\nPatch diagnostics are: \nmin_value: {band_data.min()}, max_value: {band_data.max()} \n \
                 mean_value: {band_data.mean()}, std_value: {band_data.std()}\n \
                 NaN values: {np.isnan(band_data).sum()} \nInf values: {(band_data == np.inf).sum()}\n")

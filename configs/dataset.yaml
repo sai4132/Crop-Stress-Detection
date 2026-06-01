@@ -1,0 +1,28 @@
+dataset:
+  sensors:
+    - s2
+    - s1
+    - lc
+
+agriculture:
+  enabled: true
+  classes:
+    - 12
+    - 14
+  threshold: 0.5
+
+indices:
+  ndvi:
+    enabled: true
+
+s2:
+  bands: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+  rgb_bands: [4, 3, 2]
+  nir_band: [8]
+
+s1:
+  bands: [1, 2]
+
+lc:
+  igbp_band: [1]
+  agricultural_classes: [12, 14]

@@ -1,4 +1,5 @@
 from pathlib import Path
+import yaml
 
 current_dir = Path(__file__).parent.resolve()
 
@@ -6,10 +7,17 @@ while not (current_dir / ".venv").exists() and current_dir != current_dir.parent
     current_dir = current_dir.parent
 
 PROJECT_ROOT = current_dir
-RAW_DATA_DIR = PROJECT_ROOT/"data/raw/"
-PROCESSED_DATA_DIR = PROJECT_ROOT/"data/processed/"
-CONFIG_DIR = PROJECT_ROOT/"configs/"
-MULTI_SPECTRAL_DIR = RAW_DATA_DIR/"ROIs2017_winter 2/"
-SAR_DIR = RAW_DATA_DIR/"ROIs2017_winter/"
-LAND_COVER_DIR = RAW_DATA_DIR/"ROIs2017_winter 3/"
-INSPECTION_OUTPUT_DIR = PROJECT_ROOT/"outputs/inspection/"
+
+with open(PROJECT_ROOT / "configs/paths.yaml", "r") as f:
+    paths_config = yaml.safe_load(f)
+
+DATA_DIR = PROJECT_ROOT/paths_config["DATA_DIR"]["ROOT"]
+RAW_DATA_DIR = PROJECT_ROOT/paths_config["DATA_DIR"]["RAW"]
+PROCESSED_DATA_DIR = PROJECT_ROOT/paths_config["DATA_DIR"]["PROCESSED"]
+CACHE_DATA_DIR = PROJECT_ROOT/paths_config["DATA_DIR"]["CACHE"]
+CONFIG_DIR = PROJECT_ROOT/paths_config["CONFIG_DIR"]
+MULTI_SPECTRAL_DIR = RAW_DATA_DIR/paths_config["SENSORS"]["MULTI_SPECTRAL"]
+SAR_DIR = RAW_DATA_DIR/paths_config["SENSORS"]["SAR"]
+LAND_COVER_DIR = RAW_DATA_DIR/paths_config["SENSORS"]["LAND_COVER"]
+OUTPUT_DIR = PROJECT_ROOT/paths_config["OUTPUT_DIR"]["ROOT"]
+INSPECTION_OUTPUT_DIR = PROJECT_ROOT/paths_config["OUTPUT_DIR"]["INSPECTION"]

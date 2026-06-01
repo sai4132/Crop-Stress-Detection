@@ -1,0 +1,16 @@
+DATA_DIR:
+  ROOT: "data"
+  RAW: "data/raw"
+  PROCESSED: "data/processed"
+  CACHE: "data/cache"
+
+CONFIG_DIR: "configs"
+
+OUTPUT_DIR:
+  ROOT: "outputs"
+  INSPECTION: "outputs/inspection"
+
+SENSORS:
+  MULTI_SPECTRAL: "ROIs2017_winter 2"
+  SAR: "ROIs2017_winter"
+  LAND_COVER: "ROIs2017_winter 3"
