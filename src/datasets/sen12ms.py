@@ -8,6 +8,7 @@ from torch.utils.data import Dataset
 from typing import Dict
 import yaml
 import numpy as np
+from src.preprocessing.transform import transform
 
 with open(paths.CONFIG_DIR/"dataset.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -27,9 +28,9 @@ class SEN12MSDataset(Dataset):
         self.__sar_dir = sar_dir
         self.__land_cover_dir = land_cover_dir
         self.__transform = transform
-        self.__filter_agricultural = filter_agricultural
-        self.__sensors = sensors if sensors is not None else {sensor: config["sensor"]["bands"] for sensor in config["dataset"]["sensors"]}
-        self.__compute_ndvi = compute_ndvi
+        self.filter_agricultural = filter_agricultural
+        self.sensors = sensors if sensors is not None else {sensor: config["sensor"]["bands"] for sensor in config["dataset"]["sensors"]}
+        self.compute_ndvi = compute_ndvi
         self.samples = self.__load_samples()
     
     def __load_samples(self):
@@ -45,11 +46,11 @@ class SEN12MSDataset(Dataset):
             try:
                 sample = SEN12MSSample(path)
                 if sample.s1_path.exists() and sample.lc_path.exists():
-                    if self.__filter_agricultural:
+                    if self.filter_agricultural:
                         with rio.open(sample.lc_path) as lc_src:
                             lc_raster = io.load_bands(lc_src, config["lc"]["igbp_band"]).flatten()
                             agri_score = (np.isin(lc_raster, config["lc"]["agricultural_classes"])).sum() / lc_raster.size
-                            if agri_score > config["lc"]["agricultural_threshold"]:
+                            if agri_score > config["agriculture"]["threshold"]:
                                 samples.append(sample)
                     else:
                         samples.append(sample)
@@ -67,40 +68,43 @@ class SEN12MSDataset(Dataset):
         
         sample = self.samples[idx]
 
-        s2_data, s1_data, lc_data = None, None, None
-        s2_raster_metadata, s1_raster_metadata, lc_raster_metadata = None, None, None
-        ndvi = None
-        if "s2" in  self.__sensors.keys() or self.__compute_ndvi:
+        sample_item = dict()
+        if "s2" in  self.sensors.keys() or self.compute_ndvi:
             with rio.open(sample.s2_path) as s2_src:
                 s2_data = io.load_raster(s2_src)
-                if self.__compute_ndvi:
-                    ndvi = vegetation.compute_ndvi(s2_data)
-                if "s2" not in self.__sensors.keys():
-                    s2_data = None
-                else:
-                    s2_data_idx = list(map(lambda x: x-1, self.__sensors["s2"]))
-                    s2_data = s2_data[s2_data_idx]
-                    s2_raster_metadata = io.get_raster_metadata(s2_src)
+                if self.compute_ndvi:
+                    sample_item["ndvi"] = vegetation.compute_ndvi(s2_data)
+                if "s2" in self.sensors.keys():
+                    s2_data_idx = list(map(lambda x: x-1, self.sensors["s2"]))
+                    sample_item["s2"] = s2_data[s2_data_idx]
+                    sample_item["s2_metadata"] = io.get_raster_metadata(s2_src)
 
-        if "s1" in self.__sensors.keys():
+        if "s1" in self.sensors.keys():
             with rio.open(sample.s1_path) as s1_src:
-                s1_data = io.load_bands(s1_src, self.__sensors["s1"])
-                s1_raster_metadata = io.get_raster_metadata(s1_src)
-        if "lc" in self.__sensors.keys():
+                sample_item["s1"] = io.load_bands(s1_src, self.sensors["s1"])
+                sample_item["s1_metadata"] = io.get_raster_metadata(s1_src)
+        if "lc" in self.sensors.keys():
             with rio.open(sample.lc_path) as lc_src:
-                lc_data = io.load_bands(lc_src, config["lc"]["igbp_band"])
-                lc_raster_metadata = io.get_raster_metadata(lc_src)
-
-        sample_item = {
-            "s2": s2_data,
-            "s1": s1_data,
-            "lc": lc_data,
-            "ndvi": ndvi,
-            "s2_metadata": s2_raster_metadata,
-            "s1_metadata": s1_raster_metadata,
-            "lc_metadata": lc_raster_metadata
-        }
+                sample_item["lc"] = np.isin(io.load_bands(lc_src, config["lc"]["igbp_band"]), config["lc"]["agricultural_classes"]) if self.filter_agricultural else io.load_bands(lc_src, self.sensors["lc"])
+                sample_item["lc_metadata"] = io.get_raster_metadata(lc_src)
 
         if self.__transform:
             sample_item = self.__transform(sample_item)
         return sample_item
+    
+if __name__ == "__main__":
+    dataset = SEN12MSDataset(
+        multi_spectral_dir=paths.MULTI_SPECTRAL_DIR,
+        sar_dir=paths.SAR_DIR,
+        land_cover_dir=paths.LAND_COVER_DIR,
+        transform=transform,  # Use the defined transform for testing
+        filter_agricultural=True,
+        sensors={"s2": [2, 3, 4, 8], "s1": [1, 2], "lc": [1]}  # Test with a subset of bands
+    )
+    print(f"Dataset loaded with {len(dataset)} samples.")
+    print(f"Dataset attributes: {dataset.__dict__.keys()}")
+    sample = dataset[0]
+    print("Sample keys:", sample.keys())
+    for key, value in sample.items():
+        if value is not None:
+            print(f"{key} shape: {value.shape}, dtype: {value.dtype}")
