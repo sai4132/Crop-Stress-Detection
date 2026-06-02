@@ -5,12 +5,14 @@ Early-stage geospatial ML engineering pipeline for crop stress detection using S
 Current focus is on:
 
 * robust raster ingestion,
+* multimodal dataset engineering,
 * geospatial metadata handling,
 * visualization tooling,
 * preprocessing infrastructure,
-* dataset engineering.
+* tensor trustworthiness validation,
+* operational batching and dataloader infrastructure.
 
-Model training is intentionally deferred until data trustworthiness and preprocessing infrastructure are stabilized.
+Model training is intentionally deferred until data trustworthiness, preprocessing infrastructure, and batching reliability are stabilized.
 
 ---
 
@@ -21,6 +23,7 @@ Model training is intentionally deferred until data trustworthiness and preproce
 * Develop visualization/debugging tooling for satellite imagery
 * Support Sentinel-1 SAR and Sentinel-2 multispectral workflows
 * Maintain memory-efficient processing on local hardware
+* Build multimodal PyTorch dataset abstractions
 * Follow production-style ML engineering practices
 
 ---
@@ -51,6 +54,85 @@ Raw data is intentionally excluded from git tracking.
 
 ---
 
+# Current Engineering Features
+
+Implemented:
+
+## Geospatial IO Infrastructure
+
+* Raster loading utilities
+* Band-specific loading
+* Metadata extraction
+* Raster validation
+* Semantic metadata parsing
+* Path reconstruction utilities
+
+## Visualization & Diagnostics
+
+* RGB visualization
+* NDVI visualization
+* SAR visualization
+* Land-cover visualization
+* Histogram diagnostics
+* Patch inspection tooling
+
+## Dataset Engineering
+
+* Lazy multimodal raster loading
+* Aligned S1/S2/LC sample abstraction
+* Agricultural filtering using MODIS IGBP labels
+* Optional NDVI computation
+* Configurable modality/channel selection
+* Metadata-aware sample handling
+
+## Preprocessing Infrastructure
+
+* Tensor conversion
+* Normalization transforms
+* Percentile clipping
+* Transform orchestration pipeline
+
+## Validation & Batching
+
+* Dataset validation tooling
+* Tensor trustworthiness checks
+* NaN/Inf diagnostics
+* DataLoader integration
+* Custom collate handling for metadata
+* Batch loading benchmarking
+
+---
+
+# Operational Benchmark Results
+
+Hardware:
+
+* MacBook Air (Apple Silicon, 16GB Unified Memory)
+
+Current best loading configuration:
+
+```text
+batch_size = 8
+num_workers = 0
+```
+
+Observed performance:
+
+| Metric                                | Value  |
+| ------------------------------------- | ------ |
+| Dataset initialization time           | ~27s   |
+| Single sample load time               | ~0.02s |
+| First batch iteration time            | ~0.13s |
+| Approximate memory increase per batch | ~24 MB |
+
+Observations:
+
+* Multiprocessing overhead on macOS dominates current workload.
+* `num_workers > 0` reduced performance for current raster sizes and preprocessing complexity.
+* Current pipeline is lightweight and IO-efficient.
+
+---
+
 # Tech Stack
 
 * Python
@@ -58,6 +140,7 @@ Raw data is intentionally excluded from git tracking.
 * Rasterio
 * NumPy
 * Matplotlib
+* PyYAML
 * UV package manager
 
 ---
@@ -115,21 +198,29 @@ uv sync
 
 # Running Scripts
 
-Currently scripts are executed using:
+Scripts are executed using:
 
 ```bash
 PYTHONPATH=. uv run python scripts/<script_name>.py
 ```
 
-Example:
+Examples:
 
 ```bash
-PYTHONPATH=. uv run python scripts/test_paths.py
+PYTHONPATH=. uv run python scripts/inspect_patch.py --random --ndvi
+```
+
+```bash
+PYTHONPATH=. uv run python scripts/validate_dataset.py
+```
+
+```bash
+PYTHONPATH=. uv run python scripts/benchmark_loading.py
 ```
 
 ---
 
-# Current Repository Structure
+# Repository Structure
 
 ```text
 crop-stress-detection/
@@ -154,30 +245,11 @@ crop-stress-detection/
 
 ---
 
-# Current Development Phase
+# Current Development Philosophy
 
-Completed:
-
-* project setup
-* UV environment management
-* git infrastructure
-* centralized path management
-* raster IO utilities
-* metadata extraction
-* raster validation
-
-Upcoming:
-
-* patch inspection tooling
-* RGB/NDVI visualization
-* histogram diagnostics
-* preprocessing pipeline
-* PyTorch dataset abstraction
-
----
-
-# Notes
-
-* Repository follows script-first engineering, not notebook-centric workflows.
-* Visualization is treated as debugging infrastructure.
-* Emphasis is placed on modularity, reproducibility, and geospatial correctness.
+* Script-first engineering workflow
+* Modular preprocessing and dataset abstractions
+* Visualization treated as debugging infrastructure
+* Emphasis on tensor trustworthiness before training
+* Memory-conscious multimodal geospatial processing
+* Production-style engineering patterns over notebook-centric experimentation
