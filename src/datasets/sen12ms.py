@@ -73,7 +73,7 @@ class SEN12MSDataset(Dataset):
             with rio.open(sample.s2_path) as s2_src:
                 s2_data = io.load_raster(s2_src)
                 if self.compute_ndvi:
-                    sample_item["ndvi"] = vegetation.compute_ndvi(s2_data)
+                    sample_item["ndvi"] = vegetation.calculate_ndvi(s2_data)
                 if "s2" in self.sensors.keys():
                     s2_data_idx = list(map(lambda x: x-1, self.sensors["s2"]))
                     sample_item["s2"] = s2_data[s2_data_idx]

@@ -14,3 +14,10 @@ SENSORS:
   MULTI_SPECTRAL: "ROIs2017_winter 2"
   SAR: "ROIs2017_winter"
   LAND_COVER: "ROIs2017_winter 3"
+
+SPLITS:
+  ROOT: "splits"
+  ALL: "all_labels.csv"
+  TRAIN: "train.csv"
+  VAL: "val.csv"
+  TEST: "test.csv"

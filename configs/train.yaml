@@ -1,0 +1,10 @@
+threshold:
+  ndvi_threshold: 0.3
+  stress_threshold: 0.5
+
+splits:
+  train: 0.7
+  test: 0.15
+  val: 0.15
+
+random_state: 42
