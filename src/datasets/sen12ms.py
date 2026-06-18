@@ -9,6 +9,7 @@ from typing import Dict
 import yaml
 import numpy as np
 from src.preprocessing.transform import transform
+import csv
 
 with open(paths.CONFIG_DIR/"dataset.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -16,44 +17,36 @@ with open(paths.CONFIG_DIR/"dataset.yaml", "r") as f:
 class SEN12MSDataset(Dataset):
     def __init__(
             self, 
-            multi_spectral_dir: Path, 
-            sar_dir: Path, 
-            land_cover_dir: Path, 
+            manifest_path: Path = paths.ALL_LABELS_PATH,
             transform: callable = None, 
-            filter_agricultural: bool = True, 
             sensors: Dict[str, list[int]] = None, 
             compute_ndvi: bool = False
             ):
-        self.__multi_spectral_dir = multi_spectral_dir
-        self.__sar_dir = sar_dir
-        self.__land_cover_dir = land_cover_dir
+        self.__manifest_path = manifest_path
         self.__transform = transform
-        self.filter_agricultural = filter_agricultural
         self.sensors = sensors if sensors is not None else {sensor: config["sensor"]["bands"] for sensor in config["dataset"]["sensors"]}
         self.compute_ndvi = compute_ndvi
         self.samples = self.__load_samples()
     
     def __load_samples(self):
-        file_paths = []
-        if self.__multi_spectral_dir.exists():
-            file_paths = sorted(list(self.__multi_spectral_dir.rglob("*.tif")))
+        if not self.__manifest_path.is_file():
+            raise FileNotFoundError(f"No manifest file found at {self.__manifest_path}. Please check the directory and ensure it contains the expected data.")
+        with open(self.__manifest_path, "r") as f:
+            dict_reader = csv.DictReader(f)
+            
+            file_paths = []
+            for row in dict_reader:
+                file_paths.append(row["s2_path"])
 
         if not file_paths:
-            raise FileNotFoundError(f"No .tif files found in {self.__multi_spectral_dir}. Please check the directory and ensure it contains the expected data.")
+            raise ValueError(f"No file paths found in the manifest file: {self.__manifest_path}. Generate labels or splits to populate the file.")
 
         samples = []
         for path in file_paths:
             try:
-                sample = SEN12MSSample(path)
+                sample = SEN12MSSample(Path(path))
                 if sample.s1_path.exists() and sample.lc_path.exists():
-                    if self.filter_agricultural:
-                        with rio.open(sample.lc_path) as lc_src:
-                            lc_raster = io.load_bands(lc_src, config["lc"]["igbp_band"]).flatten()
-                            agri_score = (np.isin(lc_raster, config["lc"]["agricultural_classes"])).sum() / lc_raster.size
-                            if agri_score > config["agriculture"]["threshold"]:
-                                samples.append(sample)
-                    else:
-                        samples.append(sample)
+                    samples.append(sample)
             except Exception as e:
                 print(f"Error loading sample from {path}: {e}")
         
@@ -85,7 +78,7 @@ class SEN12MSDataset(Dataset):
                 sample_item["s1_metadata"] = io.get_raster_metadata(s1_src)
         if "lc" in self.sensors.keys():
             with rio.open(sample.lc_path) as lc_src:
-                sample_item["lc"] = np.isin(io.load_bands(lc_src, config["lc"]["igbp_band"]), config["lc"]["agricultural_classes"]) if self.filter_agricultural else io.load_bands(lc_src, self.sensors["lc"])
+                sample_item["lc"] = io.load_bands(lc_src, self.sensors["lc"])
                 sample_item["lc_metadata"] = io.get_raster_metadata(lc_src)
 
         if self.__transform:
@@ -94,11 +87,8 @@ class SEN12MSDataset(Dataset):
     
 if __name__ == "__main__":
     dataset = SEN12MSDataset(
-        multi_spectral_dir=paths.MULTI_SPECTRAL_DIR,
-        sar_dir=paths.SAR_DIR,
-        land_cover_dir=paths.LAND_COVER_DIR,
+        manifest_path=paths.ALL_LABELS_PATH,
         transform=transform,  # Use the defined transform for testing
-        filter_agricultural=True,
         sensors={"s2": [2, 3, 4, 8], "s1": [1, 2], "lc": [1]}  # Test with a subset of bands
     )
     print(f"Dataset loaded with {len(dataset)} samples.")

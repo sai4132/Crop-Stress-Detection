@@ -8,3 +8,17 @@ splits:
   val: 0.15
 
 random_state: 42
+
+agriculture:
+  enabled: true
+  classes:
+    - 12
+    - 14
+  threshold: 0.5
+
+ndvi:
+  red: 4
+
+lc:
+  igbp_band: [1]
+  agricultural_classes: [12, 14]

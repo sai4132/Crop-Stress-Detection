@@ -4,13 +4,6 @@ dataset:
     - s1
     - lc
 
-agriculture:
-  enabled: true
-  classes:
-    - 12
-    - 14
-  threshold: 0.5
-
 indices:
   ndvi:
     enabled: true

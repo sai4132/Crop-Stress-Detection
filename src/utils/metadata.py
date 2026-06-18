@@ -35,3 +35,9 @@ def get_lc_path_from_s2_path(s2_path: Path, lc_dir: Path = paths.LAND_COVER_DIR)
     s2_sample_metadata = parse_patch_path(s2_path)
     lc_path = lc_dir/(f"lc_{s2_sample_metadata.ROI}/ROIs{s2_sample_metadata.year}_{s2_sample_metadata.season}_lc_{s2_sample_metadata.ROI}_p{s2_sample_metadata.patch}.tif")
     return lc_path if lc_path.exists() else None
+
+def get_sensor_path_from_metadata(metadata: PatchMetadata) -> tuple[Path]:
+    s1_path = paths.SAR_DIR/(f"s1_{metadata.ROI}/ROIs{metadata.year}_{metadata.season}_s1_{metadata.ROI}_p{metadata.patch}.tif")
+    s2_path = paths.MULTI_SPECTRAL_DIR/(f"s2_{metadata.ROI}/ROIs{metadata.year}_{metadata.season}_s2_{metadata.ROI}_p{metadata.patch}.tif")
+    lc_path = paths.LAND_COVER_DIR/(f"lc_{metadata.ROI}/ROIs{metadata.year}_{metadata.season}_lc_{metadata.ROI}_p{metadata.patch}.tif")
+    return s1_path, s2_path, lc_path

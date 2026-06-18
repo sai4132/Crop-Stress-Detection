@@ -28,11 +28,8 @@ def test_dataloader(dataset: Dataset, batch_size: int = 4, shuffle: bool = False
 
 if __name__ == "__main__":
     dataset = SEN12MSDataset(
-        multi_spectral_dir=paths.MULTI_SPECTRAL_DIR,
-        sar_dir=paths.SAR_DIR,
-        land_cover_dir=paths.LAND_COVER_DIR,
+        manifest_path=paths.ALL_LABELS_PATH,
         transform=transform,  # Use the defined transform for testing
-        filter_agricultural=True,
         sensors={"s2": [2, 3, 4, 8], "s1": [1, 2], "lc": [1]}  # Test with a subset of bands
     )
     test_dataloader(dataset, batch_size=4, shuffle=False, num_workers=4)
