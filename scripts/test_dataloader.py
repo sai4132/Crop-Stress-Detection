@@ -8,7 +8,7 @@ from src.preprocessing.transform import transform
 def test_dataloader(dataset: Dataset, batch_size: int = 4, shuffle: bool = False, num_workers: int = 0):
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, collate_fn=collate_fn)
     print(f"Testing DataLoader with batch size {batch_size} and shuffle={shuffle}")
-    expected_keys = [sensor for sensor in dataset.sensors.keys()]+[f"{sensor}_metadata" for sensor in dataset.sensors.keys()]+(["ndvi"] if dataset.compute_ndvi else [])
+    expected_keys = [sensor for sensor in dataset.sensors.keys()]+[f"{sensor}_metadata" for sensor in dataset.sensors.keys()]+(["ndvi"] if dataset.compute_ndvi else [])+["label"]
     for batch in dataloader:
         if batch is None:
             raise ValueError("Batch is None. Please check the DataLoader for issues with data loading.")
@@ -21,6 +21,9 @@ def test_dataloader(dataset: Dataset, batch_size: int = 4, shuffle: bool = False
         for key, value in batch.items():
             if isinstance(value, torch.Tensor):
                 print(f"{key} with shape {value.shape} and dtype {value.dtype}", end="\n")
+                if key=="label":
+                    labels, counts = torch.unique(value, return_counts=True)
+                    print(f"Labels : Counts - {labels}:{counts}")
             else:
                 print(f"{key} with shape {len(value)} and dtype {type(value)}", end="\n")
         print("Batch validation passed.")

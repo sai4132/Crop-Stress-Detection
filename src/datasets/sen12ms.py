@@ -36,7 +36,7 @@ class SEN12MSDataset(Dataset):
             
             file_paths = []
             for row in dict_reader:
-                file_paths.append(row["s2_path"])
+                file_paths.append(row)
 
         if not file_paths:
             raise ValueError(f"No file paths found in the manifest file: {self.__manifest_path}. Generate labels or splits to populate the file.")
@@ -44,8 +44,9 @@ class SEN12MSDataset(Dataset):
         samples = []
         for path in file_paths:
             try:
-                sample = SEN12MSSample(Path(path))
+                sample = SEN12MSSample(Path(path["s2_path"]))
                 if sample.s1_path.exists() and sample.lc_path.exists():
+                    sample.label = int(path["label"]=='True')
                     samples.append(sample)
             except Exception as e:
                 print(f"Error loading sample from {path}: {e}")
@@ -80,7 +81,7 @@ class SEN12MSDataset(Dataset):
             with rio.open(sample.lc_path) as lc_src:
                 sample_item["lc"] = io.load_bands(lc_src, self.sensors["lc"])
                 sample_item["lc_metadata"] = io.get_raster_metadata(lc_src)
-
+        sample_item["label"] = sample.label
         if self.__transform:
             sample_item = self.__transform(sample_item)
         return sample_item

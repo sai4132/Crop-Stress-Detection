@@ -8,6 +8,7 @@ class SEN12MSSample:
 
         self.metadata: PatchMetadata = parse_patch_path(sample_path)
         self.s1_path, self.s2_path, self.lc_path = get_sensor_path_from_metadata(self.metadata)
+        self.label: int = None
 
     @property
     def sample_id(self) -> str:
