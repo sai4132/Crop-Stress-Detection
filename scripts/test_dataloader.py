@@ -1,11 +1,11 @@
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from src.datasets.sen12ms import SEN12MSDataset
 from src.datasets.collate import collate_fn
 from src.utils import paths
 from src.preprocessing.transform import transform
 
-def test_dataloader(dataset: Dataset, batch_size: int = 4, shuffle: bool = False, num_workers: int = 0):
+def test_dataloader(dataset: SEN12MSDataset, batch_size: int = 4, shuffle: bool = False, num_workers: int = 0):
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers, collate_fn=collate_fn)
     print(f"Testing DataLoader with batch size {batch_size} and shuffle={shuffle}")
     expected_keys = [sensor for sensor in dataset.sensors.keys()]+[f"{sensor}_metadata" for sensor in dataset.sensors.keys()]+(["ndvi"] if dataset.compute_ndvi else [])+["label"]
